@@ -28,9 +28,16 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 unsigned int loadCubemap(vector<std::string> faces);
 
+void renderQuad();
+
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+bool hdr = true;
+bool bloom = true;
+bool hdrKeyPressed = false;
+bool bloomKeyPressed = false;
+float exposure = 1.0f;
 
 // camera
 
@@ -59,6 +66,7 @@ struct ProgramState {
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
     glm::vec3 backpackPosition = glm::vec3(0.0f);
+    glm::vec3 backpackRotation = glm::vec3(0.0f);
     float backpackScale = 1.0f;
     PointLight pointLight;
 
@@ -84,7 +92,11 @@ void ProgramState::SaveToFile(std::string filename) {
         << camera.Front.z << '\n'
         <<backpackPosition.x<<'\n'
         <<backpackPosition.y<<'\n'
-        <<backpackPosition.z<<'\n';
+        <<backpackPosition.z<<'\n'
+        <<backpackRotation.x<<'\n'
+        <<backpackRotation.y<<'\n'
+        <<backpackRotation.z<<'\n'
+        ;
 }
 
 void ProgramState::LoadFromFile(std::string filename) {
@@ -102,7 +114,11 @@ void ProgramState::LoadFromFile(std::string filename) {
            >> camera.Front.z
            >>backpackPosition.x
            >>backpackPosition.y
-           >>backpackPosition.z;
+           >>backpackPosition.z
+           >>backpackRotation.x
+           >>backpackRotation.y
+           >>backpackRotation.z
+           ;
     }
 }
 
@@ -167,6 +183,178 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glCullFace(GL_FRONT);
+
+    float cubeVertices[] = {
+            // positions                     // normals                        // texture coords
+
+            // FRONT FACE
+            0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+
+            // BACK FACE
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+            // LEFT FACE
+            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+            // RIGHT FACE
+            0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+
+            // BOTTOM FACE
+            0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+            // TOP FACE
+            0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f
+    };
+
+
+
+    //  BLOOM
+
+    Shader lightCubeShader("resources/shaders/light_source.vs", "resources/shaders/light_source.fs");
+    //Shader blendingShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
+    Shader blurShader("resources/shaders/7.blur.vs", "resources/shaders/7.blur.fs");
+    Shader bloom_finalShader("resources/shaders/7.bloom_final.vs", "resources/shaders/7.bloom_final.fs");
+
+    //----------------------------------
+    // configure floating point framebuffer
+    // ------------------------------------
+    unsigned int hdrFBO;
+    glGenFramebuffers(1, &hdrFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+    // create 2 floating point color buffers (1 for normal rendering, other for brightness threshold values)
+    unsigned int colorBuffers[2];
+    glGenTextures(2, colorBuffers);
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        // attach texture to framebuffer
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
+    }
+    // create and attach depth buffer (renderbuffer)
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, attachments);
+    // finally check if framebuffer is complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // ping-pong-framebuffer for blurring
+    unsigned int pingpongFBO[2];
+    unsigned int pingpongColorbuffers[2];
+    glGenFramebuffers(2, pingpongFBO);
+    glGenTextures(2, pingpongColorbuffers);
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                        GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
+        // also check if framebuffers are complete (no need for depth buffer)
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "Framebuffer not complete!" << std::endl;
+    }
+    // ------------------------------------------------
+
+
+
+    //configure the cube's VAO (and VBO)
+    //glFrontFace(GL_CW);
+
+    unsigned int cubeVBO, cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(cubeVAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    // second, configure the light's VAO (VBO stays the same; the cubeVertices are the same for the light object which is also a 3D cube)
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+
+    glm::vec3 pointLightPositions[] = {
+            glm::vec3( -4.0f,  2.5f,  0.3f)
+    };
+
+    //blendingShader.use();
+    //blendingShader.setInt("texture1", 0);
+
+    blurShader.use();
+    blurShader.setInt("image", 0);
+
+    bloom_finalShader.use();
+    bloom_finalShader.setInt("scene", 0);
+    bloom_finalShader.setInt("bloomBlur", 1);
+    bloom_finalShader.setFloat("bloomThreshold", 0.5f);
+
+    glm::vec3 lightColor;
+
 
     //load skybox
 
@@ -214,6 +402,9 @@ int main() {
             -1.0f, -1.0f,  1.0f,
             1.0f, -1.0f,  1.0f
     };
+
+
+
 
     stbi_set_flip_vertically_on_load(false);
 
@@ -264,18 +455,24 @@ int main() {
     Model sand("resources/objects/sand/sand.obj");
     sand.SetShaderTextureNamePrefix("material.");
 
+    Model swing("resources/objects/swing/child_swing.obj");
+    swing.SetShaderTextureNamePrefix("material.");
+
+    Model lamp("resources/objects/lamp/candelabre.obj");
+    lamp.SetShaderTextureNamePrefix("material.");
+
 
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(-4.0f,2.0f,0.0f);
     pointLight.ambient = glm::vec3(0.5, 0.1, 0.1);
     //pointLight.ambient = glm::vec3(1,1,1);
-    pointLight.diffuse = glm::vec3(1, 1 ,1);
+    pointLight.diffuse = glm::vec3(0.95f, 1 ,1);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
     pointLight.constant = 1.0f;
-    pointLight.linear = 0.01f;
-    pointLight.quadratic = 0.00015;
+    pointLight.linear = 0.14f;
+    pointLight.quadratic = 0.08;
 
 
 
@@ -304,32 +501,14 @@ int main() {
         glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-
-
-/*        //SKYBOX
-        skyboxShader.use();
-        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix()));
-
-        skyboxShader.setMat4("view",view);
-        skyboxShader.setMat4("projection", projection);
-        glDepthMask(GL_FALSE);
-
-// ... set view and projection matrix
-        glBindVertexArray(skyboxVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glDepthMask(GL_TRUE);
-// ... draw rest of the scene
-*/
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
-        pointLight.position = glm::vec3(glm::vec3(-23.0f,20.0f,60.0f));
+        pointLight.position = glm::vec3(glm::vec3(-4.0f,2.5f,0.3f));
         //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", /*glm::vec3 (5,5,5)*/pointLight.ambient);
@@ -347,7 +526,7 @@ int main() {
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
-        //random comment
+
 
 
 
@@ -358,7 +537,24 @@ int main() {
                 /*programState->backpackPosition*/); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(9.0f)/*glm::vec3(programState->backpackScale)*/);    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
+        ourShader.setFloat("material.shininess", 1.0f);
         sand.Draw(ourShader);
+
+        ourShader.setFloat("material.shininess", 32.0f);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-4.0f,0.3f,-2.0f)
+                /*programState->backpackPosition*/); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(0.0035f)/*glm::vec3(programState->backpackScale)*/);    // it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", model);
+        lamp.Draw(ourShader);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-3.0f,0.3f,-1.0f)
+                /*programState->backpackPosition*/); // translate it down so it's at the center of the scene
+        //model = glm::rotate(model, glm::radians(currentFrame), glm::vec3(0,0,1));
+        model = glm::scale(model, glm::vec3(0.1f)/*glm::vec3(programState->backpackScale)*/);    // it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", model);
+        swing.Draw(ourShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.4f,0,-2.0f)
@@ -396,7 +592,7 @@ int main() {
         ourShader.setMat4("model", model);
         cocoTree.Draw(ourShader);
 
-
+        //RENDERING IGHT BOX
         model = glm::mat4(1.0f);
         model = glm::translate(model,
                                glm::vec3(0,0,-0.6)); // translate it down so it's at the center of the scene
@@ -405,14 +601,34 @@ int main() {
         ourShader.setMat4("model", model);
         tobogan.Draw(ourShader);
 
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        glBindVertexArray(cubeVAO);
+
+        // we now draw as many light bulbs as we have point lights.
+        model = glm::mat4(1.0f);
+
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3 (-4.0f,2.7f,-1.6f)/*programState->backpackPosition*/);
+        model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
+        lightCubeShader.setVec3("lightColor", glm::vec3(1.0f,1.0f,1.0f));
+        lightCubeShader.setMat4("model", model);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        //glDisable(GL_CULL_FACE);
+        glBindVertexArray(0);
+
 
 
         //SKYBOX1
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix())); // remove translation from the view matrix
-        projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+        /*projection = glm::perspective(glm::radians(programState->camera.Zoom),
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);*/
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
         // skybox cube
@@ -422,6 +638,40 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
+        //------END OF SKYBOX------
+
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // 2. blur bright fragments with two-pass Gaussian Blur
+        // --------------------------------------------------
+        bool horizontal = true, first_iteration = true;
+        unsigned int amount = 5;
+        blurShader.use();
+        for (unsigned int i = 0; i < amount; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+            blurShader.setInt("horizontal", horizontal);
+            glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);  // bind texture of other framebuffer (or scene if first iteration)
+            renderQuad();
+            horizontal = !horizontal;
+            if (first_iteration)
+                first_iteration = false;
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // 3. now render floating point color buffer to 2D plane and tonemap HDR colors to default framebuffer's (clamped) color range
+        // --------------------------------------------------------------------------------------------------------------------------
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        bloom_finalShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+        bloom_finalShader.setInt("bloom", bloom);
+        bloom_finalShader.setFloat("exposure", exposure);
+        renderQuad();
+
 
 
         if (programState->ImGuiEnabled)
@@ -508,6 +758,7 @@ void DrawImGui(ProgramState *programState) {
         ImGui::SliderFloat("Float slider", &f, 0.0, 1.0);
         ImGui::ColorEdit3("Background color", (float *) &programState->clearColor);
         ImGui::DragFloat3("Backpack position", (float*)&programState->backpackPosition);
+        ImGui::DragFloat3("Backpack rotation", (float*)&programState->backpackRotation);
         ImGui::DragFloat("Backpack scale", &programState->backpackScale, 0.05, 0.1, 4.0);
 
         ImGui::DragFloat("pointLight.constant", &programState->pointLight.constant, 0.05, 0.0, 1.0);
@@ -572,4 +823,35 @@ unsigned int loadCubemap(vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
+}
+
+
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+
+void renderQuad()
+{
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+                // positions        // texture Coords
+                -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+                -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+                1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+                1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }
