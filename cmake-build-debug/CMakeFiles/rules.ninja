@@ -99,7 +99,7 @@ rule CXX_STATIC_LIBRARY_LINKER__imgui_Debug
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = /opt/clion-2022.2.4/bin/cmake/linux/bin/cmake --regenerate-during-build -S/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base -B/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base/cmake-build-debug
+  command = /opt/clion-2022.2.4/bin/cmake/linux/bin/cmake --regenerate-during-build -S/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG -B/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/cmake-build-debug
   description = Re-running CMake...
   generator = 1
 

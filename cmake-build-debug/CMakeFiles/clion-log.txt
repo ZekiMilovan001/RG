@@ -1,4 +1,4 @@
-/opt/clion-2022.2.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/opt/clion-2022.2.4/bin/ninja/linux/ninja -G Ninja -S /media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base -B /media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base/cmake-build-debug
+/opt/clion-2022.2.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/opt/clion-2022.2.4/bin/ninja/linux/ninja -G Ninja -S /media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG -B /media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/cmake-build-debug
 -- The C compiler identification is GNU 9.4.0
 -- The CXX compiler identification is GNU 9.4.0
 -- Detecting C compiler ABI info
@@ -16,4 +16,4 @@
 -- Found ASSIMP: /usr/lib/x86_64-linux-gnu/libassimp.so
 -- Configuring done
 -- Generating done
--- Build files have been written to: /media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base/cmake-build-debug
+-- Build files have been written to: /media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/cmake-build-debug

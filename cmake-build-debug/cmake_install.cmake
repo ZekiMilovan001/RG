@@ -1,4 +1,4 @@
-# Install script for directory: /media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base
+# Install script for directory: /media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -44,8 +44,8 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base/cmake-build-debug/libs/glad/cmake_install.cmake")
-  include("/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base/cmake-build-debug/libs/imgui/cmake_install.cmake")
+  include("/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/cmake-build-debug/libs/glad/cmake_install.cmake")
+  include("/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/cmake-build-debug/libs/imgui/cmake_install.cmake")
 
 endif()
 
@@ -57,5 +57,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/project_base/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/media/matf-racunarska-grafika/63148e7e-875a-4ca6-8c27-4878c979f6ef/test/PROJEKAT_ZA_RG/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
