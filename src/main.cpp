@@ -29,6 +29,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 unsigned int loadCubemap(vector<std::string> faces);
 
 void renderQuad();
+unsigned int loadTexture(char const * path);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -245,9 +246,11 @@ int main() {
     //  BLOOM
 
     Shader lightCubeShader("resources/shaders/light_source.vs", "resources/shaders/light_source.fs");
-    //Shader blendingShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
+    Shader blendingShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
     Shader blurShader("resources/shaders/7.blur.vs", "resources/shaders/7.blur.fs");
     Shader bloom_finalShader("resources/shaders/7.bloom_final.vs", "resources/shaders/7.bloom_final.fs");
+    Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
+    Shader skyboxShader("resources/shaders/skybox.vs","resources/shaders/skybox.fs");
 
     //----------------------------------
     // configure floating point framebuffer
@@ -339,7 +342,9 @@ int main() {
 
 
     glm::vec3 pointLightPositions[] = {
-            glm::vec3( -4.0f,  2.5f,  0.3f)
+            glm::vec3(-4.0f,2.7f,-1.6f),
+            glm::vec3(-1.0f,1.847f,-0.3f),
+            glm::vec3(-0.3f,1.847f,0.366f)
     };
 
     //blendingShader.use();
@@ -433,10 +438,8 @@ int main() {
 
 
 
-    // build and compile shaders
-    // -------------------------
-    Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
-    Shader skyboxShader("resources/shaders/skybox.vs","resources/shaders/skybox.fs");
+    // TEXTURE TO BLEND
+    unsigned int aquarium = loadTexture(FileSystem::getPath("resources/textures/tex.jpeg").c_str());
 
     // load models
     // -----------
@@ -464,17 +467,21 @@ int main() {
 
 
     PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(-4.0f,2.0f,0.0f);
+    pointLight.position = glm::vec3(-4.0f,2.7f,-1.6f);
     pointLight.ambient = glm::vec3(0.5, 0.1, 0.1);
     //pointLight.ambient = glm::vec3(1,1,1);
     pointLight.diffuse = glm::vec3(0.95f, 1 ,1);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
-    pointLight.constant = 1.0f;
-    pointLight.linear = 0.14f;
-    pointLight.quadratic = 0.08;
+    float pointLight_constant = 1.0f;
+    float pointLight_linear = 7.0f;
+    float pointLight_quadratic = 16.08;
+
+    glm::vec3 ambient(0,0,0);
 
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -508,17 +515,78 @@ int main() {
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
+
+        // FIRST LIGHT SOURCE -------------------------------------------------------
         pointLight.position = glm::vec3(glm::vec3(-4.0f,2.5f,0.3f));
         //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
-        ourShader.setVec3("pointLight.position", pointLight.position);
-        ourShader.setVec3("pointLight.ambient", /*glm::vec3 (5,5,5)*/pointLight.ambient);
-        ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-        ourShader.setVec3("pointLight.specular", pointLight.specular);
-        ourShader.setFloat("pointLight.constant", pointLight.constant);
-        ourShader.setFloat("pointLight.linear", pointLight.linear);
-        ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+        ourShader.setVec3("pointLight[0].position",pointLightPositions[0]);
+        ourShader.setVec3("pointLight[0].ambient", ambient);
+        ourShader.setVec3("pointLight[0].diffuse", glm::vec3(0.0f,1.0f,1.0f));
+        ourShader.setVec3("pointLight[0].specular", glm::vec3(0.0f,2.5f,2.5f));
+        ourShader.setFloat("pointLight[0].constant", pointLight_constant);
+        ourShader.setFloat("pointLight[0].linear", pointLight_linear);
+        ourShader.setFloat("pointLight[0].quadratic", pointLight_quadratic);
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
+
+        ourShader.setVec3("spotLight[0].position", pointLightPositions[0]);
+        ourShader.setVec3("spotLight[0].direction", 0.0f, -1.0f, 0.0f);
+        ourShader.setVec3("spotLight[0].ambient", 0.0f, 0.0f, 0.0f);
+        ourShader.setVec3("spotLight[0].diffuse", 0.0f, 3.0f, 3.0f);
+        ourShader.setVec3("spotLight[0].specular", 0.0f, 3.0f, 3.0f);
+        ourShader.setFloat("spotLight[0].constant", pointLight_constant);
+        ourShader.setFloat("spotLight[0].linear", pointLight_linear);
+        ourShader.setFloat("spotLight[0].quadratic", pointLight_quadratic);
+        ourShader.setFloat("spotLight[0].cutOff", glm::cos(glm::radians(16.0f)));
+        ourShader.setFloat("spotLight[0].outerCutOff", glm::cos(glm::radians(20.0f)));
+
+
+        //SECOND LIGHT SOURCE -------------------------
+
+        ourShader.setVec3("pointLight[1].position", pointLightPositions[1]);
+        ourShader.setVec3("pointLight[1].ambient", ambient);
+        ourShader.setVec3("pointLight[1].diffuse", 5,5,5);
+        ourShader.setVec3("pointLight[1].specular", 5,5,5);
+        ourShader.setFloat("pointLight[1].constant", pointLight_constant);
+        ourShader.setFloat("pointLight[1].linear", pointLight_linear);
+        ourShader.setFloat("pointLight[1].quadratic", pointLight_quadratic);
+        ourShader.setVec3("viewPosition", programState->camera.Position);
+        ourShader.setFloat("material.shininess", 32.0f);
+
+        ourShader.setVec3("spotLight[1].position", pointLightPositions[1]);
+        ourShader.setVec3("spotLight[1].direction", 0.0f, -1.0f, 0.0f);
+        ourShader.setVec3("spotLight[1].ambient", 0.0f, 0.0f, 0.0f);
+        ourShader.setVec3("spotLight[1].diffuse", 1.0f, 1.0f, 1.0f);
+        ourShader.setVec3("spotLight[1].specular", 1.0f, 1.0f, 1.0f);
+        ourShader.setFloat("spotLight[1].constant", 1.0f);
+        ourShader.setFloat("spotLight[1].linear", 3.4);
+        ourShader.setFloat("spotLight[1].quadratic", 0.932);
+        ourShader.setFloat("spotLight[1].cutOff", glm::cos(glm::radians(2.0f)));
+        ourShader.setFloat("spotLight[1].outerCutOff", glm::cos(glm::radians(24.0f)));
+
+        //THIRD LIGHT SOURCE------------------------------------------
+        ourShader.setVec3("pointLight[2].position", pointLightPositions[2]);
+        ourShader.setVec3("pointLight[2].ambient", ambient);
+        ourShader.setVec3("pointLight[2].diffuse", 5,0,5);
+        ourShader.setVec3("pointLight[2].specular", 5,0,5);
+        ourShader.setFloat("pointLight[2].constant", pointLight_constant);
+        ourShader.setFloat("pointLight[2].linear", pointLight_linear);
+        ourShader.setFloat("pointLight[2].quadratic", pointLight_quadratic);
+        ourShader.setVec3("viewPosition", programState->camera.Position);
+        ourShader.setFloat("material.shininess", 32.0f);
+
+        ourShader.setVec3("spotLight[2].position", pointLightPositions[2]);
+        ourShader.setVec3("spotLight[2].direction", 0.0f, -1.0f, 0.0f);
+        ourShader.setVec3("spotLight[2].ambient", 0.0f, 0.0f, 0.0f);
+        ourShader.setVec3("spotLight[2].diffuse", 1.0f, 0.0f, 1.0f);
+        ourShader.setVec3("spotLight[2].specular", 1.0f, 0.0f, 1.0f);
+        ourShader.setFloat("spotLight[2].constant", 1.0f);
+        ourShader.setFloat("spotLight[2].linear", 3.4);
+        ourShader.setFloat("spotLight[2].quadratic", 0.932);
+        ourShader.setFloat("spotLight[2].cutOff", glm::cos(glm::radians(2.0f)));
+        ourShader.setFloat("spotLight[2].outerCutOff", glm::cos(glm::radians(24.0f)));
+
+
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
@@ -533,9 +601,9 @@ int main() {
         // render the loaded model
 
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f,-14.38f,0.0f)
+        model = glm::translate(model, glm::vec3(0.0f,-24.0f,0.0f)
                 /*programState->backpackPosition*/); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(9.0f)/*glm::vec3(programState->backpackScale)*/);    // it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(15.0f)/*glm::vec3(programState->backpackScale)*/);    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
         ourShader.setFloat("material.shininess", 1.0f);
         sand.Draw(ourShader);
@@ -549,7 +617,7 @@ int main() {
         lamp.Draw(ourShader);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-3.0f,0.3f,-1.0f)
+        model = glm::translate(model, glm::vec3(-3.0f,-0.3f,-1.0f)
                 /*programState->backpackPosition*/); // translate it down so it's at the center of the scene
         //model = glm::rotate(model, glm::radians(currentFrame), glm::vec3(0,0,1));
         model = glm::scale(model, glm::vec3(0.1f)/*glm::vec3(programState->backpackScale)*/);    // it's a bit too big for our scene, so scale it down
@@ -592,7 +660,7 @@ int main() {
         ourShader.setMat4("model", model);
         cocoTree.Draw(ourShader);
 
-        //RENDERING IGHT BOX
+
         model = glm::mat4(1.0f);
         model = glm::translate(model,
                                glm::vec3(0,0,-0.6)); // translate it down so it's at the center of the scene
@@ -601,6 +669,7 @@ int main() {
         ourShader.setMat4("model", model);
         tobogan.Draw(ourShader);
 
+        //FIRST LIGHT-----------------------------------
         lightCubeShader.use();
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
@@ -611,9 +680,9 @@ int main() {
 
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3 (-4.0f,2.7f,-1.6f)/*programState->backpackPosition*/);
+        model = glm::translate(model, pointLightPositions[0]/*programState->backpackPosition*/);
         model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
-        lightCubeShader.setVec3("lightColor", glm::vec3(1.0f,1.0f,1.0f));
+        lightCubeShader.setVec3("lightColor", glm::vec3(0.0f,2.5f,2.5f));
         lightCubeShader.setMat4("model", model);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -621,6 +690,46 @@ int main() {
         //glDisable(GL_CULL_FACE);
         glBindVertexArray(0);
 
+        //SECOND LIGHT-----------------------------
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        glBindVertexArray(cubeVAO);
+
+        // we now draw as many light bulbs as we have point lights.
+        //model = glm::mat4(1.0f);
+
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, pointLightPositions[1]/*programState->backpackPosition*/);
+        model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
+        lightCubeShader.setVec3("lightColor", glm::vec3(5.0f,5.0f,5.0f));
+        lightCubeShader.setMat4("model", model);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        //glDisable(GL_CULL_FACE);
+        glBindVertexArray(0);
+        //THIRD LIGHT-------------------------------
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        glBindVertexArray(cubeVAO);
+
+        // we now draw as many light bulbs as we have point lights.
+        //model = glm::mat4(1.0f);
+
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, pointLightPositions[2] /*programState->backpackPosition*/);
+        model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
+        lightCubeShader.setVec3("lightColor", glm::vec3(3.0f,0.0f,3.0f));
+        lightCubeShader.setMat4("model", model);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        //glDisable(GL_CULL_FACE);
+        glBindVertexArray(0);
 
 
         //SKYBOX1
@@ -639,6 +748,28 @@ int main() {
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
         //------END OF SKYBOX------
+        //AQUARIUM
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, aquarium);
+         view = programState->camera.GetViewMatrix();
+        blendingShader.use();
+        blendingShader.setInt("texture1", 0);
+        blendingShader.setMat4("projection", projection);
+        blendingShader.setMat4("view", view);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, /*programState->backpackPosition*/glm::vec3(0,0,0));
+        model = glm::scale(model, glm::vec3(15.0f)); // Make it a smaller cube
+        blendingShader.setMat4("model", model);
+
+
+
+        // render the cube
+        glBindVertexArray(cubeVAO);
+
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
 
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -646,7 +777,7 @@ int main() {
         // 2. blur bright fragments with two-pass Gaussian Blur
         // --------------------------------------------------
         bool horizontal = true, first_iteration = true;
-        unsigned int amount = 5;
+        unsigned int amount = 20;
         blurShader.use();
         for (unsigned int i = 0; i < amount; i++)
         {
@@ -855,3 +986,42 @@ void renderQuad()
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }
+
+unsigned int loadTexture(char const * path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+
+
