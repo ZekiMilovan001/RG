@@ -1,11 +1,10 @@
-# project_base
-Prazan projekat sa pratećim bibliotekama koje koristimo na času. 
+#Computer graphics
 
-# Uputstvo
-1. Main se nalazi u src/main.cpp
-2. Cpp fajlovi idu u src folder
-3. Zaglavlja (h i hpp) fajlovi idu u include
-4. Šejderi idu u folder shaders. `Vertex shader` ima ekstenziju `.vs`, `fragment shader` ima ekstenziju `.fs`
+
+1. Main in contained in src/main.cpp
+2. Cpp files are saved in src folder
+3. Headers (h and hpp) are in include folder
+4. Shader folder: shaders. `Vertex shader` - `.vs`, `fragment shader` - `.fs`
 # ALT+SHIFT+F10 -> project_base -> run
 
 # Commands
