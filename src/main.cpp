@@ -488,6 +488,9 @@ int main() {
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
+
+    glEnable(GL_CULL_FACE);
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
