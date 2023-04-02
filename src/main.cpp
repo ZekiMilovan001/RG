@@ -342,7 +342,7 @@ int main() {
 
 
     glm::vec3 pointLightPositions[] = {
-            glm::vec3(-4.0f,2.7f,-1.6f),
+            glm::vec3(-4.0f,1.2f,-1.6f),
             glm::vec3(-1.0f,1.847f,-0.3f),
             glm::vec3(-0.3f,1.847f,0.366f)
     };
@@ -522,7 +522,7 @@ int main() {
         ourShader.setVec3("pointLight[0].position",pointLightPositions[0]);
         ourShader.setVec3("pointLight[0].ambient", ambient);
         ourShader.setVec3("pointLight[0].diffuse", glm::vec3(0.0f,1.0f,1.0f));
-        ourShader.setVec3("pointLight[0].specular", glm::vec3(0.0f,2.5f,2.5f));
+        ourShader.setVec3("pointLight[0].specular", glm::vec3(0.0f,5.0f,5.0f));
         ourShader.setFloat("pointLight[0].constant", pointLight_constant);
         ourShader.setFloat("pointLight[0].linear", pointLight_linear);
         ourShader.setFloat("pointLight[0].quadratic", pointLight_quadratic);
@@ -537,7 +537,7 @@ int main() {
         ourShader.setFloat("spotLight[0].constant", pointLight_constant);
         ourShader.setFloat("spotLight[0].linear", pointLight_linear);
         ourShader.setFloat("spotLight[0].quadratic", pointLight_quadratic);
-        ourShader.setFloat("spotLight[0].cutOff", glm::cos(glm::radians(16.0f)));
+        ourShader.setFloat("spotLight[0].cutOff", glm::cos(glm::radians(1.0f)));
         ourShader.setFloat("spotLight[0].outerCutOff", glm::cos(glm::radians(20.0f)));
 
 
@@ -610,7 +610,7 @@ int main() {
 
         ourShader.setFloat("material.shininess", 32.0f);
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-4.0f,0.3f,-2.0f)
+        model = glm::translate(model, glm::vec3(-4.0f,-1.2f,-2.0f)
                 /*programState->backpackPosition*/); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(0.0035f)/*glm::vec3(programState->backpackScale)*/);    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
@@ -654,8 +654,8 @@ int main() {
 
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-0.4f,0,2.2f)
-                               /*programState->backpackPosition*/); // translate it down so it's at the center of the scene
+        model = glm::translate(model, /*glm::vec3(-0.4f,0,2.2f)*/
+                               programState->backpackPosition); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(0.005)/*glm::vec3(programState->backpackScale)*/);    // it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
         cocoTree.Draw(ourShader);
