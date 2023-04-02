@@ -1,4 +1,4 @@
-#Computer graphics
+# Computer graphics
 
 
 1. Main in contained in src/main.cpp
