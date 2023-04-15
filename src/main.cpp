@@ -468,14 +468,14 @@ int main() {
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(-4.0f,2.7f,-1.6f);
-    pointLight.ambient = glm::vec3(0.5, 0.1, 0.1);
+    pointLight.ambient = glm::vec3(0.2, 0.1, 0.1);
     //pointLight.ambient = glm::vec3(1,1,1);
     pointLight.diffuse = glm::vec3(0.95f, 1 ,1);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
-    float pointLight_constant = 1.0f;
-    float pointLight_linear = 7.0f;
-    float pointLight_quadratic = 16.08;
+    float pointLight_constant = 3.0f;
+    float pointLight_linear = 24.0f;
+    float pointLight_quadratic = 32.08;
 
     glm::vec3 ambient(0,0,0);
 
@@ -489,7 +489,7 @@ int main() {
     skyboxShader.setInt("skybox", 0);
 
 
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
 
     // render loop
     // -----------
@@ -514,6 +514,7 @@ int main() {
         glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glEnable(GL_CULL_FACE);
 
 
         // don't forget to enable shader before setting uniforms
@@ -523,9 +524,9 @@ int main() {
         pointLight.position = glm::vec3(glm::vec3(-4.0f,2.5f,0.3f));
         //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight[0].position",pointLightPositions[0]);
-        ourShader.setVec3("pointLight[0].ambient", ambient);
+        ourShader.setVec3("pointLight[0].ambient", glm::vec3(0.2f,0.2f,0.2f));
         ourShader.setVec3("pointLight[0].diffuse", glm::vec3(0.0f,1.0f,1.0f));
-        ourShader.setVec3("pointLight[0].specular", glm::vec3(0.0f,5.0f,5.0f));
+        ourShader.setVec3("pointLight[0].specular", glm::vec3(0.0f,2.0f,2.0f));
         ourShader.setFloat("pointLight[0].constant", pointLight_constant);
         ourShader.setFloat("pointLight[0].linear", pointLight_linear);
         ourShader.setFloat("pointLight[0].quadratic", pointLight_quadratic);
@@ -535,7 +536,7 @@ int main() {
         ourShader.setVec3("spotLight[0].position", pointLightPositions[0]);
         ourShader.setVec3("spotLight[0].direction", 0.0f, -1.0f, 0.0f);
         ourShader.setVec3("spotLight[0].ambient", 0.0f, 0.0f, 0.0f);
-        ourShader.setVec3("spotLight[0].diffuse", 0.0f, 3.0f, 3.0f);
+        ourShader.setVec3("spotLight[0].diffuse", 0.0f, 1.0f, 1.0f);
         ourShader.setVec3("spotLight[0].specular", 0.0f, 3.0f, 3.0f);
         ourShader.setFloat("spotLight[0].constant", pointLight_constant);
         ourShader.setFloat("spotLight[0].linear", pointLight_linear);
@@ -548,8 +549,8 @@ int main() {
 
         ourShader.setVec3("pointLight[1].position", pointLightPositions[1]);
         ourShader.setVec3("pointLight[1].ambient", ambient);
-        ourShader.setVec3("pointLight[1].diffuse", 5,5,5);
-        ourShader.setVec3("pointLight[1].specular", 5,5,5);
+        ourShader.setVec3("pointLight[1].diffuse", 1,1,1);
+        ourShader.setVec3("pointLight[1].specular", 1,1,1);
         ourShader.setFloat("pointLight[1].constant", pointLight_constant);
         ourShader.setFloat("pointLight[1].linear", pointLight_linear);
         ourShader.setFloat("pointLight[1].quadratic", pointLight_quadratic);
@@ -564,14 +565,14 @@ int main() {
         ourShader.setFloat("spotLight[1].constant", 1.0f);
         ourShader.setFloat("spotLight[1].linear", 3.4);
         ourShader.setFloat("spotLight[1].quadratic", 0.932);
-        ourShader.setFloat("spotLight[1].cutOff", glm::cos(glm::radians(2.0f)));
+        ourShader.setFloat("spotLight[1].cutOff", glm::cos(glm::radians(1.0f)));
         ourShader.setFloat("spotLight[1].outerCutOff", glm::cos(glm::radians(24.0f)));
 
         //THIRD LIGHT SOURCE------------------------------------------
         ourShader.setVec3("pointLight[2].position", pointLightPositions[2]);
         ourShader.setVec3("pointLight[2].ambient", ambient);
-        ourShader.setVec3("pointLight[2].diffuse", 5,0,5);
-        ourShader.setVec3("pointLight[2].specular", 5,0,5);
+        ourShader.setVec3("pointLight[2].diffuse", 2,0,2);
+        ourShader.setVec3("pointLight[2].specular", 2,0,2);
         ourShader.setFloat("pointLight[2].constant", pointLight_constant);
         ourShader.setFloat("pointLight[2].linear", pointLight_linear);
         ourShader.setFloat("pointLight[2].quadratic", pointLight_quadratic);
@@ -685,7 +686,7 @@ int main() {
         model = glm::mat4(1.0f);
         model = glm::translate(model, pointLightPositions[0]/*programState->backpackPosition*/);
         model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
-        lightCubeShader.setVec3("lightColor", glm::vec3(0.0f,2.5f,2.5f));
+        lightCubeShader.setVec3("lightColor", glm::vec3(0.0f,5.0f,5.0f));
         lightCubeShader.setMat4("model", model);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -706,7 +707,7 @@ int main() {
         model = glm::mat4(1.0f);
         model = glm::translate(model, pointLightPositions[1]/*programState->backpackPosition*/);
         model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
-        lightCubeShader.setVec3("lightColor", glm::vec3(5.0f,5.0f,5.0f));
+        lightCubeShader.setVec3("lightColor", glm::vec3(1.0f,1.0f,1.0f));
         lightCubeShader.setMat4("model", model);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -726,7 +727,7 @@ int main() {
         model = glm::mat4(1.0f);
         model = glm::translate(model, pointLightPositions[2] /*programState->backpackPosition*/);
         model = glm::scale(model, glm::vec3(0.1f)); // Make it a smaller cube
-        lightCubeShader.setVec3("lightColor", glm::vec3(3.0f,0.0f,3.0f));
+        lightCubeShader.setVec3("lightColor", glm::vec3(5.0f,0.0f,5.0f));
         lightCubeShader.setMat4("model", model);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -752,6 +753,8 @@ int main() {
         glDepthFunc(GL_LESS); // set depth function back to default
         //------END OF SKYBOX------
         //AQUARIUM
+
+        glDisable(GL_CULL_FACE);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, aquarium);
          view = programState->camera.GetViewMatrix();
@@ -776,6 +779,8 @@ int main() {
 
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glEnable(GL_CULL_FACE);
 
         // 2. blur bright fragments with two-pass Gaussian Blur
         // --------------------------------------------------
