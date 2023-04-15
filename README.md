@@ -7,6 +7,9 @@
 4. Shader folder: shaders. `Vertex shader` - `.vs`, `fragment shader` - `.fs`
 # ALT+SHIFT+F10 -> project_base -> run
 
+#YouTube link
+https://www.youtube.com/watch?v=6aEaGpEK5CQ
+
 # Commands
 W - move front
 S - move back
